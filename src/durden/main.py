@@ -12,23 +12,22 @@ from datetime import datetime, timezone
 from durden.schemas import PredictionResponse, APIStatusResponse
 from durden.services.detector import Detector
 from durden.utils import load_image
-
-BASE_DIR = Path(__file__).resolve().parent
-STATIC_DIR = BASE_DIR / "static"
+from durden.settings import settings
 
 
 async def load_detector(app: FastAPI):
-    await asyncio.to_thread(app.state.detector.load_models)
+    detector = Detector(model_names=settings.models)
+
+    await asyncio.to_thread(detector.load_models)
+    app.state.detector = detector
     app.state.model_ready = True
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    detector = Detector(model_names=["yolov8n.pt", "yolov8s.pt"])
-
-    app.state.detector = detector
-    app.state.created_at = datetime.now(timezone.utc)
     app.state.model_ready = False
+    app.state.detector = None
+    app.state.created_at = datetime.now(timezone.utc)
 
     asyncio.create_task(load_detector(app))
 
@@ -37,12 +36,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Durden Object Detection API", lifespan=lifespan)
 
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/static", StaticFiles(directory=settings.static_dir), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
 async def home():
-    html_path = STATIC_DIR / "index.html"
+    html_path = settings.static_dir / "index.html"
     return HTMLResponse(html_path.read_text())
 
 
@@ -81,10 +80,10 @@ async def health(request: Request):
 @app.get("/status")
 async def status(request: Request):
     return APIStatusResponse(
-        name="Durden Object Detection API",
-        version="0.1.0",
-        environment="development",
+        name=settings.name,
+        version=settings.version,
+        environment=settings.env,
         started_at=request.app.state.created_at,
-        models=request.app.state.detector.model_names,
+        models=request.app.state.detector.model_names if request.app.state.detector else [],
         model_state=request.app.state.model_ready,
     )
