@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DURDEN — YOLO Object Detection</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<div class="app">
+
+    <div class="sidebar">
+        <div>
+            <div class="brand">DURDEN</div>
+            <div class="nav">
+                <div class="nav-item active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/></svg>
+                        DETECT
+                </div>
+                <div class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+                        ABOUT
+                </div>
+                <div class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3"/></svg>
+                        API DOCS
+                </div>
+            </div>
+        </div>
+
+        <div class="status-card">
+            <div class="status-title"><span class="status-dot" id="statusDot"></span> SYSTEM STATUS</div>
+            <div class="status-row"><span class="status-ok" id="statusText">CHECKING…</span></div>
+            <div class="status-row">MODEL: <b id="statusModel">—</b></div>
+            <div class="status-row">UPTIME: <b id="uptime">00:00:00</b></div>
+            <div class="status-row">API: <b id="statusMeta">—</b></div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div class="title-block">
+                <h1><span class="accent">YOLO</span> OBJECT DETECTION</h1>
+                <div class="subtitle">SEE THE WORLD. DETECT EVERYTHING.</div>
+            </div>
+            <div class="live-badge"><span class="live-dot"></span> LIVE</div>
+        </div>
+
+        <div class="panels">
+            <div class="panel">
+                <div class="panel-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                        UPLOAD IMAGE
+                </div>
+                <div class="panel-sub">Upload an image and let YOLO detect objects in it.</div>
+                
+                <div class="model-select-block">
+                    <div class="model-select-label">MODEL</div>
+                    <select id="modelSelect" class="model-select" disabled>
+                        <option value="">Loading models…</option>
+                    </select>
+                </div>
+                
+                <div class="dropzone" id="dropzone">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 18a4 4 0 0 1-1-7.86A5 5 0 0 1 15.9 7H17a4 4 0 0 1 1 7.86"/><path d="M12 12v8M9 15l3-3 3 3"/></svg>
+                    <div class="dropzone-title">DRAG &amp; DROP IMAGE HERE</div>
+                    <div class="dropzone-sub">or click to browse</div>
+                </div>
+                <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+                <div class="filehint">JPG, PNG, WEBP • Max size 10MB</div>
+                <div class="file-card" id="fileCard">
+                    <img class="file-thumb" id="fileThumb" alt="">
+                    <div class="file-meta">
+                        <div class="file-name" id="fileName"></div>
+                        <div class="file-size" id="fileSize"></div>
+                    </div>
+                    <svg class="file-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>
+                </div>
+
+                <button class="detect-btn" id="detectBtn" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2"/></svg>
+                        DETECT OBJECTS
+                </button>
+
+                <div class="threshold-block">
+                    <div class="threshold-label">CONFIDENCE THRESHOLD <span class="val" id="threshVal">0.25</span></div>
+                    <input type="range" id="threshold" min="0" max="1" step="0.01" value="0.25">
+                </div>
+            </div>
+
+            <div class="result-col">
+                <div class="panel result-panel">
+                    <div class="result-header">
+                        <div class="panel-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5" fill="currentColor"/></svg>
+                            DETECTION RESULT
+                        </div>
+                        <div class="inference-time" id="inferenceTime" style="display:none">INFERENCE TIME: <b id="inferenceMs">—</b></div>
+                    </div>
+
+                    <div class="image-stage" id="imageStage">
+                        <div class="empty-state" id="emptyState">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                            <div class="line1">NO IMAGE ANALYZED YET</div>
+                            <div class="line2">Upload an image and click Detect Objects to see results</div>
+                        </div>
+
+                        <div class="canvas-wrap" id="canvasWrap">
+                            <img id="sourceImg" alt="">
+                            <canvas id="overlay"></canvas>
+                        </div>
+
+                        <div class="loading-overlay" id="loadingOverlay">
+                            <div class="spinner"></div>
+                            <div class="loading-text">RUNNING INFERENCE…</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel objects-panel">
+                    <div class="panel-header">
+                        <span style="display:flex;align-items:center;gap:8px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5" fill="currentColor"/></svg>
+                                DETECTED OBJECTS
+                        </span>
+                        <span class="objects-count" id="objectsCount">0 objects detected</span>
+                    </div>
+
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                <th style="width:36px">#</th>
+                                <th>LABEL</th>
+                                <th>CONFIDENCE</th>
+                                <th>BOUNDING BOX (x1, y1, x2, y2)</th>
+                                <th style="width:40px"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="objectsBody">
+                                <tr class="empty-table-row"><td colspan="5">No detections yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
