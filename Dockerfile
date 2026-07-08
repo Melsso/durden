@@ -26,6 +26,4 @@ RUN poetry install --only main --no-interaction --no-ansi --no-root
 
 COPY ./src .
 
-COPY .env .
-
 CMD ["uvicorn", "durden.main:app", "--host", "0.0.0.0", "--port", "8000"]
