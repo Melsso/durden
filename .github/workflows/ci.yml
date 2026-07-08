@@ -29,18 +29,34 @@ jobs:
       - name: Run tests
         env:
           name: "Durden Object Detection API"
-          models: "yolov8n.pt,yolov8s.pt"
+          models: '["yolov8n.pt","yolov8s.pt"]'
           env: "test"
           version: "0.1.0"
           static_dir: "src/durden/static"
         run: poetry run pytest
 
   docker-build:
+    needs: test
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build Docker image
-        run: docker build -t durden .
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:latest
