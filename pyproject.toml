@@ -15,11 +15,28 @@ dependencies = [
     "pillow (>=12.3.0,<13.0.0)",
     "ruff (>=0.15.20,<0.16.0)",
     "ultralytics (>=8.4.90,<9.0.0)",
-    "pydantic-settings (>=2.14.2,<3.0.0)"
+    "pydantic-settings (>=2.14.2,<3.0.0)",
+    "torch",
+    "torchvision"
 ]
 
 [tool.poetry]
 packages = [{include = "durden", from = "src"}]
+
+[[tool.poetry.source]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+[tool.poetry.dependencies]
+torch = [
+    { markers = "sys_platform == 'darwin'", source = "PyPI" },
+    { markers = "sys_platform == 'linux'", source = "pytorch-cpu" },
+]
+torchvision = [
+    { markers = "sys_platform == 'darwin'", source = "PyPI" },
+    { markers = "sys_platform == 'linux'", source = "pytorch-cpu" },
+]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
