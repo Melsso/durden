@@ -26,6 +26,7 @@
     const statusModel = document.getElementById('statusModel');
     const statusMeta = document.getElementById('statusMeta');
 
+    let isOnline = false;
     let selectedFile = null;
     let lastDetections = [];
     let highlightIndex = -1;
@@ -44,8 +45,9 @@
     let startTime = Date.now();
     function pad(n){ return n.toString().padStart(2,'0'); }
     function updateUptime(){
-        if (statusText.textContent == '● OFFLINE') {
-            document.getElementById('uptime').textContent = `-`;
+        if (!isOnline) {
+            document.getElementById('uptime').textContent = `—`;
+            return;
         }
         const base = serverStartTime !== null ? serverStartTime : startTime;
         const s = Math.max(0, Math.floor((Date.now()-base)/1000));
@@ -61,11 +63,13 @@
             if(!res.ok) throw new Error('status ' + res.status);
             const data = await res.json();
             if (data.model_state === true) {
+                isOnline = true;
                 statusDot.classList.remove('offline');
                 statusText.classList.remove('status-off');
                 statusText.classList.add('status-ok');
                 statusText.textContent = '● OPERATIONAL';
             } else {
+                isOnline = false;
                 statusDot.classList.remove('offline');
                 statusText.classList.remove('status-ok');
                 statusText.classList.add('status-off');
@@ -82,7 +86,7 @@
             populateModelSelect(data.models || []);
             updateUptime();
         } catch(err) {
-            console.error('Failed to load /status', err);
+            isOnline = false;
             statusDot.classList.add('offline');
             statusText.classList.remove('status-ok');
             statusText.classList.add('status-off');
@@ -90,7 +94,6 @@
 
             statusModel.textContent = '—';
             statusMeta.textContent = '—';
-        
             modelSelect.innerHTML = '<option value="">No models available</option>';
             modelSelect.disabled = true;
         }
