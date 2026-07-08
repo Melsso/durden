@@ -25,6 +25,7 @@ def client():
 
     app.router.lifespan_context = original_lifespan
 
+
 def test_health(client):
     response = client.get("/health")
 

@@ -5,7 +5,6 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import Annotated
 from datetime import datetime, timezone
 
@@ -84,6 +83,8 @@ async def status(request: Request):
         version=settings.version,
         environment=settings.env,
         started_at=request.app.state.created_at,
-        models=request.app.state.detector.model_names if request.app.state.detector else [],
+        models=request.app.state.detector.model_names
+        if request.app.state.detector
+        else [],
         model_state=request.app.state.model_ready,
     )
