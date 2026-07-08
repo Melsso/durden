@@ -44,6 +44,9 @@
     let startTime = Date.now();
     function pad(n){ return n.toString().padStart(2,'0'); }
     function updateUptime(){
+        if (statusText.textContent == '● OFFLINE') {
+            document.getElementById('uptime').textContent = `-`;
+        }
         const base = serverStartTime !== null ? serverStartTime : startTime;
         const s = Math.max(0, Math.floor((Date.now()-base)/1000));
         const hh = Math.floor(s/3600), mm = Math.floor((s%3600)/60), ss = s%60;

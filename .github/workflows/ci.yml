@@ -25,6 +25,16 @@ jobs:
 
       - name: Run lint
         run: poetry run ruff check .
-      
+
       - name: Run tests
         run: poetry run pytest
+
+  docker-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t durden .
