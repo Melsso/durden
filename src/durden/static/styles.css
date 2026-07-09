@@ -184,10 +184,19 @@ overflow: hidden;
     border-radius: 20px;
     font-weight:600;
 }
+
+.live-badge.offline{
+    border-color: var(--panel-border);
+    color: var(--text-faint);
+}
 .live-dot{
     width:7px; height:7px; border-radius:50%;
     background: var(--red);
     animation: pulse 1.4s infinite;
+}
+.live-badge.offline .live-dot{
+    background: var(--text-faint);
+    animation: none;
 }
 @keyframes pulse{
     0%,100%{ opacity:1; }

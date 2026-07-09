@@ -31,9 +31,9 @@
         <div class="status-card">
             <div class="status-title"><span class="status-dot" id="statusDot"></span> SYSTEM STATUS</div>
             <div class="status-row"><span class="status-ok" id="statusText">CHECKING…</span></div>
-            <div class="status-row">MODEL: <b id="statusModel">—</b></div>
-            <div class="status-row">UPTIME: <b id="uptime">00:00:00</b></div>
-            <div class="status-row">API: <b id="statusMeta">—</b></div>
+            <div class="status-row">MODEL<br><b id="statusModel">—</b></div>
+            <div class="status-row">UPTIME<br><b id="uptime">00:00:00</b></div>
+            <div class="status-row">API<br><b id="statusMeta">—</b></div>
         </div>
     </div>
 
@@ -43,7 +43,10 @@
                 <h1><span class="accent">YOLO</span> OBJECT DETECTION</h1>
                 <div class="subtitle">SEE THE WORLD. DETECT EVERYTHING.</div>
             </div>
-            <div class="live-badge"><span class="live-dot"></span> LIVE</div>
+            <div class="live-badge" id="liveBadge">
+                <span class="live-dot" id="liveDot"></span>
+                <span id="liveText">LIVE</span>
+            </div>
         </div>
 
         <div class="panels">
