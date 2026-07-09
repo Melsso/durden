@@ -3,6 +3,7 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch
 
 jobs:
   test:
@@ -62,4 +63,26 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ env.IMAGE_NAME }}:latest
+          tags: ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+  
+  deploy:
+      needs: docker-build
+      runs-on: ubuntu-latest
+
+      permissions:
+        id-token: write
+        contents: read
+
+      steps:
+        - name: Authenticate Google Cloud
+          uses: google-github-actions/auth@v2
+          with:
+            workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+            service_account: github-actions-deployer@project-df4f98a7-7326-426c-bc0.iam.gserviceaccount.com
+
+        - name: Deploy Cloud Run
+          uses: google-github-actions/deploy-cloudrun@v2
+          with:
+            service: durden
+            region: europe-west1
+            image: ${{ needs.docker-build.outputs.image }}
