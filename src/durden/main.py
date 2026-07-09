@@ -1,7 +1,7 @@
 import asyncio
 
 from fastapi import FastAPI, UploadFile, File, Request, Query, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from contextlib import asynccontextmanager
@@ -38,10 +38,19 @@ app = FastAPI(title="Durden Object Detection API", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=settings.static_dir), name="static")
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=FileResponse)
 async def home():
-    html_path = settings.static_dir / "index.html"
-    return HTMLResponse(html_path.read_text())
+    return FileResponse(settings.static_dir / "index.html")
+
+
+@app.get("/about", response_class=FileResponse)
+async def about():
+    return FileResponse(settings.static_dir / "about.html")
+
+
+@app.get("/api-docs", response_class=FileResponse)
+async def api_docs():
+    return FileResponse(settings.static_dir / "api_docs.html")
 
 
 @app.post("/predict", response_model=PredictionResponse)

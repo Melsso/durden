@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Docs — DURDEN</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div>
+      <div class="brand">DURDEN</div>
+      <div class="nav">
+        <a href="/" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/></svg>
+          DETECT
+        </a>
+        <a href="/about" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+          ABOUT
+        </a>
+        <a href="/api-docs" class="nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3"/></svg>
+          API DOCS
+        </a>
+      </div>
+    </div>
+
+    <div class="status-card">
+      <div class="status-title"><span class="status-dot" id="statusDot"></span> SYSTEM STATUS</div>
+      <div class="status-row"><span class="status-ok" id="statusText">CHECKING…</span></div>
+      <div class="status-row">MODEL<br><b id="statusModel">—</b></div>
+      <div class="status-row">UPTIME<br><b id="uptime">00:00:00</b></div>
+      <div class="status-row">API<br><b id="statusMeta">—</b></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="top-bar">
+      <div class="title-block">
+        <h1><span class="accent">YOLO</span> OBJECT DETECTION</h1>
+        <div class="subtitle">SEE THE WORLD. DETECT EVERYTHING.</div>
+      </div>
+      <div class="live-badge"><span class="live-dot"></span> LIVE</div>
+    </div>
+
+    <div class="content-page">
+
+      <div class="content-panel">
+        <h2>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3"/></svg>
+          API REFERENCE
+        </h2>
+        <p>
+          This is a quick reference for the two endpoints the frontend uses.
+          For the full interactive spec — try-it-out requests, schemas, and
+          every field — see the auto-generated
+          <a class="external-link" href="/docs" target="_blank" rel="noopener">Swagger UI</a>
+          or <a class="external-link" href="/redoc" target="_blank" rel="noopener">ReDoc</a>.
+        </p>
+      </div>
+
+      <div class="content-panel">
+        <div class="endpoint-row">
+          <span class="endpoint-badge post">POST</span>
+          <span class="endpoint-path">/predict</span>
+        </div>
+        <p>
+          Runs object detection on an uploaded image. Accepts a
+          <code>multipart/form-data</code> body with the image file, and
+          optionally a specific model name to run inference with.
+        </p>
+
+        <p style="color:#d8d8d8; font-weight:600; font-size:12.5px; letter-spacing:0.5px; margin-bottom:8px;">REQUEST</p>
+        <div class="code-block">POST /predict
+Content-Type: multipart/form-data
+
+file: &lt;binary image data&gt;
+model: "yolov8n"   (optional)</div>
+
+        <p style="color:#d8d8d8; font-weight:600; font-size:12.5px; letter-spacing:0.5px; margin-bottom:8px;">RESPONSE 200</p>
+        <div class="code-block">{
+  "filename": "city_street.jpg",
+  "detections": [
+    {
+      "label": "car",
+      "confidence": 0.94,
+      "bbox": [120, 280, 420, 520]
+    },
+    {
+      "label": "bus",
+      "confidence": 0.90,
+      "bbox": [520, 220, 780, 480]
+    }
+  ],
+  "inference_time_ms": 132.4
+}</div>
+        <p>
+          <code>bbox</code> is <code>[x1, y1, x2, y2]</code> in pixel
+          coordinates relative to the uploaded image's original resolution.
+        </p>
+      </div>
+
+      <div class="content-panel">
+        <div class="endpoint-row">
+          <span class="endpoint-badge get">GET</span>
+          <span class="endpoint-path">/status</span>
+        </div>
+        <p>
+          Returns service health, version, and the list of available models.
+          Used to populate the system status card and model selector on
+          every page.
+        </p>
+
+        <p style="color:#d8d8d8; font-weight:600; font-size:12.5px; letter-spacing:0.5px; margin-bottom:8px;">RESPONSE 200</p>
+        <div class="code-block">{
+  "name": "Durden Object Detection API",
+  "version": "0.1.0",
+  "environment": "development",
+  "started_at": "2026-07-09T08:12:43Z",
+  "models": ["yolov8n", "yolov8s"]
+}</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/static/status.js"></script>
+</body>
+</html>

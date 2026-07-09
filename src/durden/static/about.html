@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — DURDEN</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<div class="app">
+    <div class="sidebar">
+        <div>
+            <div class="brand">DURDEN</div>
+            <div class="nav">
+                <a href="/" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/></svg>
+                    DETECT
+                </a>
+                <a href="/about" class="nav-item active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+                    ABOUT
+                </a>
+                <a href="/api-docs" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3"/></svg>
+                    API DOCS
+                </a>
+            </div>
+        </div>
+
+        <div class="status-card">
+            <div class="status-title"><span class="status-dot" id="statusDot"></span> SYSTEM STATUS</div>
+            <div class="status-row"><span class="status-ok" id="statusText">CHECKING…</span></div>
+            <div class="status-row">MODEL<br><b id="statusModel">—</b></div>
+            <div class="status-row">UPTIME<br><b id="uptime">00:00:00</b></div>
+            <div class="status-row">API<br><b id="statusMeta">—</b></div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div class="title-block">
+                <h1><span class="accent">YOLO</span> OBJECT DETECTION</h1>
+                <div class="subtitle">SEE THE WORLD. DETECT EVERYTHING.</div>
+            </div>
+        <div class="live-badge"><span class="live-dot"></span> LIVE</div>
+        </div>
+
+        <div class="content-page">
+            <div class="content-panel">
+                <h2>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+                    WHAT IS DURDEN
+                </h2>
+                <p>
+                    Durden is a real-time object detection tool built around a YOLO model.
+                    Upload an image, and the model returns every object it recognizes —
+                    each with a label, a confidence score, and a bounding box — rendered
+                    directly on top of your image.
+                </p>
+                <p>
+                    It's built for quickly sanity-checking a model's output: dragging in
+                    a photo, tuning the confidence threshold, and seeing exactly what
+                    the network is picking up and how sure it is.
+                </p>
+            </div>
+
+            <div class="content-panel">
+                <h2>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg>
+                    HOW IT WORKS
+                </h2>
+                <ul>
+                    <li>You drop or select an image on the <b style="color:#d8d8d8;">Detect</b> page.</li>
+                    <li>The browser sends it to the backend as a <code>multipart/form-data</code> upload.</li>
+                    <li>A YOLO model runs inference and returns labels, confidence scores, and bounding box coordinates for everything it finds.</li>
+                    <li>The frontend draws each box directly onto the image, color-coded by object class, and lists every detection in a sortable table below.</li>
+                    <li>A confidence slider lets you filter out low-confidence detections without re-running inference.</li>
+                </ul>
+            </div>
+
+            <div class="content-panel">
+                <h2>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    STACK
+                </h2>
+                <p>
+                    The backend is a <b style="color:#d8d8d8;">FastAPI</b> service wrapping a YOLO
+                    model for inference, exposing a simple <code>/predict</code> endpoint plus a
+                    <code>/status</code> endpoint for health and model information.
+                </p>
+                <p>
+                    The frontend is plain HTML, CSS, and JavaScript — no build step or
+                    framework — talking to the API directly with <code>fetch</code> and drawing
+                    detection boxes on an HTML canvas.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/status.js"></script>
+</body>
+</html>

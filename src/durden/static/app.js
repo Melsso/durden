@@ -21,109 +21,21 @@
     const objectsCount = document.getElementById('objectsCount');
 
     const modelSelect = document.getElementById('modelSelect');
-    const statusDot = document.getElementById('statusDot');
-    const statusText = document.getElementById('statusText');
-    const statusModel = document.getElementById('statusModel');
-    const statusMeta = document.getElementById('statusMeta');
 
-    let isOnline = false;
     let selectedFile = null;
     let lastDetections = [];
     let highlightIndex = -1;
-    let serverStartTime = null;
 
     const palette = ['#f4c531', '#2f8fe0', '#8b5cf6', '#34c759', '#ff6b6b', '#26c6da', '#e07bd0'];
     const labelColors = {};
-    function colorFor(label){
-        if(!labelColors[label]){
+    function colorFor(label) {
+        if (!labelColors[label]) {
             const idx = Object.keys(labelColors).length % palette.length;
             labelColors[label] = palette[idx];
         }
         return labelColors[label];
     }
 
-    let startTime = Date.now();
-    function pad(n){ return n.toString().padStart(2,'0'); }
-    function updateUptime(){
-        if (!isOnline) {
-            document.getElementById('uptime').textContent = `—`;
-            return;
-        }
-        const base = serverStartTime !== null ? serverStartTime : startTime;
-        const s = Math.max(0, Math.floor((Date.now()-base)/1000));
-        const hh = Math.floor(s/3600), mm = Math.floor((s%3600)/60), ss = s%60;
-        document.getElementById('uptime').textContent = `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
-    }
-    setInterval(updateUptime, 1000);
-    updateUptime();
-
-    async function loadStatus(){
-        try {
-            const res = await fetch('/status');
-            if(!res.ok) throw new Error('status ' + res.status);
-            const data = await res.json();
-            if (data.model_state === true) {
-                isOnline = true;
-                statusDot.classList.remove('offline');
-                statusText.classList.remove('status-off');
-                statusText.classList.add('status-ok');
-                statusText.textContent = '● OPERATIONAL';
-            } else {
-                isOnline = false;
-                statusDot.classList.remove('offline');
-                statusText.classList.remove('status-ok');
-                statusText.classList.add('status-off');
-                statusText.textContent = '● LOADING MODELS';
-            }
-
-            if(data.started_at){
-                const parsed = Date.parse(data.started_at);
-                if(!isNaN(parsed)) serverStartTime = parsed;
-            }
-        
-            statusMeta.textContent = `v${data.version} · ${data.environment}`;
-        
-            populateModelSelect(data.models || []);
-            updateUptime();
-        } catch(err) {
-            isOnline = false;
-            statusDot.classList.add('offline');
-            statusText.classList.remove('status-ok');
-            statusText.classList.add('status-off');
-            statusText.textContent = '● OFFLINE';
-
-            statusModel.textContent = '—';
-            statusMeta.textContent = '—';
-            modelSelect.innerHTML = '<option value="">No models available</option>';
-            modelSelect.disabled = true;
-        }
-    }
-    
-    function populateModelSelect(models){
-        if (!models.length) {
-            modelSelect.innerHTML = '<option value="">No models available</option>';
-            modelSelect.disabled = true;
-            statusModel.textContent = '—';
-            return;
-        }
-        modelSelect.innerHTML = models
-        .map(name => `<option value="${name}">${name}</option>`)
-        .join('');
-        modelSelect.disabled = false;
-        modelSelect.value = models[0];
-        statusModel.textContent = models[0];
-    }
-    
-    modelSelect.addEventListener('change', () => {
-        statusModel.textContent = modelSelect.value || '—';
-    });
-    
-    loadStatus();
-    async function pollStatus(){
-        await loadStatus();
-    }
-    setInterval(pollStatus, 5000);
-    
     threshold.addEventListener('input', () => {
         threshVal.textContent = parseFloat(threshold.value).toFixed(2);
         drawOverlay();
@@ -135,20 +47,18 @@
     dropzone.addEventListener('drop', (e) => {
         e.preventDefault();
         dropzone.classList.remove('drag');
-        if(e.dataTransfer.files && e.dataTransfer.files[0]){
-            handleFile(e.dataTransfer.files[0]);
-        }
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
     });
     fileInput.addEventListener('change', (e) => {
-        if(e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+        if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
     });
 
-    function formatBytes(bytes){
-        if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
-        return (bytes/(1024*1024)).toFixed(1) + ' MB';
+    function formatBytes(bytes) {
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     }
 
-    function handleFile(file){
+    function handleFile(file) {
         selectedFile = file;
         fileName.textContent = file.name;
         fileSize.textContent = formatBytes(file.size);
@@ -170,25 +80,21 @@
     }
 
     detectBtn.addEventListener('click', async () => {
-        if(!selectedFile) return;
+        if (!selectedFile) return;
         loadingOverlay.classList.add('show');
         detectBtn.disabled = true;
 
         try{
             const form = new FormData();
             form.append('file', selectedFile);
-            if(modelSelect.value){
-                form.append('model', modelSelect.value);
-            }
+            if (modelSelect.value) form.append('model', modelSelect.value);
 
             const response = await fetch('/predict', {
                 method: 'POST',
                 body: form
             });
 
-            if(!response.ok){
-                throw new Error('Request failed with status ' + response.status);
-            }
+            if (!response.ok) throw new Error('Request failed with status ' + response.status);
 
             const data = await response.json();
             lastDetections = data.detections || [];
@@ -197,18 +103,18 @@
 
             renderTable(lastDetections);
             drawOverlay();
-        }catch(err){
+        } catch(err) {
             console.error(err);
             objectsBody.innerHTML = `<tr class="empty-table-row"><td colspan="5">Detection failed: ${err.message}</td></tr>`;
-        }finally{
+        } finally {
             loadingOverlay.classList.remove('show');
             detectBtn.disabled = false;
         }
     });
 
-    function renderTable(detections){
+    function renderTable(detections) {
         objectsCount.textContent = `${detections.length} object${detections.length===1?'':'s'} detected`;
-        if(detections.length === 0){
+        if (detections.length === 0) {
             objectsBody.innerHTML = '<tr class="empty-table-row"><td colspan="5">No detections yet</td></tr>';
             return;
         }
@@ -222,9 +128,9 @@
                 <td class="conf-cell">${(d.confidence*100).toFixed(1)}%</td>
                 <td class="bbox-cell">[${d.bbox.join(', ')}]</td>
                 <td>
-                    <button class="eye-btn" data-idx="${i}" title="Highlight on image">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
-                    </button>
+                <button class="eye-btn" data-idx="${i}" title="Highlight on image">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
                 </td>
             `;
             objectsBody.appendChild(tr);
@@ -240,7 +146,7 @@
     }
 
     function drawOverlay(){
-        if(!sourceImg.naturalWidth) return;
+        if (!sourceImg.naturalWidth) return;
         const w = sourceImg.naturalWidth;
         const h = sourceImg.naturalHeight;
         overlay.width = w;
@@ -255,7 +161,7 @@
         ctx.textBaseline = 'top';
 
         lastDetections.forEach((d, i) => {
-            if(d.confidence < minConf) return;
+            if (d.confidence < minConf) return;
             const [x1, y1, x2, y2] = d.bbox;
             const color = colorFor(d.label);
             const isHighlighted = highlightIndex === i;
@@ -263,7 +169,7 @@
 
             ctx.strokeStyle = color;
             ctx.lineWidth = lineWidth;
-            if(isHighlighted){
+            if (isHighlighted) {
                 ctx.shadowColor = color;
                 ctx.shadowBlur = 14;
             } else {
@@ -285,12 +191,12 @@
         });
     }
 
-    function getContrastColor(hex){
+    function getContrastColor(hex) {
         const c = hex.replace('#','');
         const r = parseInt(c.substr(0,2),16);
         const g = parseInt(c.substr(2,2),16);
         const b = parseInt(c.substr(4,2),16);
-        const lum = (0.299*r + 0.587*g + 0.114*b)/255;
+        const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
         return lum > 0.6 ? '#111111' : '#ffffff';
     }
 
