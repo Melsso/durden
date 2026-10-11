@@ -1,11 +1,12 @@
 [project]
 name = "durden"
 version = "0.1.0"
-description = ""
+description = "Object detection API built with FastAPI and YOLO, with a small web UI."
 authors = [
     {name = "Mallem Sofiane",email = "melsopv@gmail.com"}
 ]
 readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "fastapi (>=0.139.0,<0.140.0)",
@@ -13,7 +14,6 @@ dependencies = [
     "pydantic (>=2.13.4,<3.0.0)",
     "python-multipart (>=0.0.32,<0.0.33)",
     "pillow (>=12.3.0,<13.0.0)",
-    "ruff (>=0.15.20,<0.16.0)",
     "ultralytics (>=8.4.90,<9.0.0)",
     "pydantic-settings (>=2.14.2,<3.0.0)",
     "torch",
@@ -45,6 +45,32 @@ build-backend = "poetry.core.masonry.api"
 [dependency-groups]
 dev = [
     "pytest (>=9.1.1,<10.0.0)",
+    "pytest-cov (>=7.0.0,<8.0.0)",
     "httpx (>=0.28.1,<0.29.0)",
-    "deptry (>=0.25.1,<0.26.0)"
+    "deptry (>=0.25.1,<0.26.0)",
+    "ruff (>=0.15.20,<0.16.0)",
+    "mypy (>=2.4.0,<3.0.0)"
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["durden"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.deptry]
+known_first_party = ["durden"]
+
+[tool.deptry.per_rule_ignores]
+DEP002 = ["uvicorn", "python-multipart", "torch", "torchvision"]

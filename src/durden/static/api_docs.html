@@ -30,7 +30,7 @@
 
     <div class="status-card">
       <div class="status-title"><span class="status-dot" id="statusDot"></span> SYSTEM STATUS</div>
-      <div class="status-row"><span class="status-ok" id="statusText">CHECKING…</span></div>
+      <div class="status-row" aria-live="polite"><span class="status-ok" id="statusText">CHECKING…</span></div>
       <div class="status-row">MODEL<br><b id="statusModel">—</b></div>
       <div class="status-row">UPTIME<br><b id="uptime">00:00:00</b></div>
       <div class="status-row">API<br><b id="statusMeta">—</b></div>
@@ -45,7 +45,7 @@
       </div>
       <div class="live-badge" id="liveBadge">
         <span class="live-dot" id="liveDot"></span>
-        <span id="liveText">LIVE</span>
+        <span id="liveText">ONLINE</span>
       </div>
 
     </div>
@@ -58,7 +58,7 @@
           API REFERENCE
         </h2>
         <p>
-          This is a quick reference for the two endpoints the frontend uses.
+          This is a quick reference for the endpoints Durden exposes.
           For the full interactive spec — try-it-out requests, schemas, and
           every field — see the auto-generated
           <a class="external-link" href="/docs" target="_blank" rel="noopener">Swagger UI</a>
@@ -72,21 +72,29 @@
           <span class="endpoint-path">/predict</span>
         </div>
         <p>
-          Runs object detection on an uploaded image. Accepts a
-          <code>multipart/form-data</code> body with the image file, and
-          optionally a specific model name to run inference with.
+          Runs object detection on an uploaded image (JPEG, PNG or WEBP, up to
+          10&nbsp;MB). Accepts a <code>multipart/form-data</code> body with the image
+          file; the model and confidence threshold are optional query parameters.
+          Returns <code>503</code> while models are still loading.
         </p>
 
         <p style="color:#d8d8d8; font-weight:600; font-size:12.5px; letter-spacing:0.5px; margin-bottom:8px;">REQUEST</p>
-        <div class="code-block">POST /predict
+        <div class="code-block">POST /predict?model_name=yolov8n.pt&amp;conf=0.25
 Content-Type: multipart/form-data
 
 file: &lt;binary image data&gt;
-model: "yolov8n"   (optional)</div>
+
+model_name  (query, optional)  default: first configured model
+conf        (query, optional)  0.0 - 1.0, default 0.25</div>
+
+        <p style="color:#d8d8d8; font-weight:600; font-size:12.5px; letter-spacing:0.5px; margin-bottom:8px;">EXAMPLE</p>
+        <div class="code-block">curl -X POST "http://localhost:8000/predict?conf=0.25" \
+  -F "file=@city_street.jpg"</div>
 
         <p style="color:#d8d8d8; font-weight:600; font-size:12.5px; letter-spacing:0.5px; margin-bottom:8px;">RESPONSE 200</p>
         <div class="code-block">{
   "filename": "city_street.jpg",
+  "model_name": "yolov8n.pt",
   "detections": [
     {
       "label": "car",
@@ -105,6 +113,12 @@ model: "yolov8n"   (optional)</div>
           <code>bbox</code> is <code>[x1, y1, x2, y2]</code> in pixel
           coordinates relative to the uploaded image's original resolution.
         </p>
+
+        <p style="color:#d8d8d8; font-weight:600; font-size:12.5px; letter-spacing:0.5px; margin-bottom:8px;">ERRORS</p>
+        <div class="code-block">400  not a valid JPEG/PNG/WEBP image, or unknown model_name
+413  file larger than 10 MB
+422  invalid query parameter (e.g. conf outside 0 - 1)
+503  models still loading or failed to load</div>
       </div>
 
       <div class="content-panel">
@@ -113,19 +127,49 @@ model: "yolov8n"   (optional)</div>
           <span class="endpoint-path">/status</span>
         </div>
         <p>
-          Returns service health, version, and the list of available models.
-          Used to populate the system status card and model selector on
-          every page.
+          Returns version, environment, start time, the list of loaded models and
+          whether they are ready. Used to populate the system status card and
+          model selector on every page.
         </p>
 
         <p style="color:#d8d8d8; font-weight:600; font-size:12.5px; letter-spacing:0.5px; margin-bottom:8px;">RESPONSE 200</p>
         <div class="code-block">{
   "name": "Durden Object Detection API",
   "version": "0.1.0",
-  "environment": "development",
+  "environment": "production",
   "started_at": "2026-07-09T08:12:43Z",
-  "models": ["yolov8n", "yolov8s"]
+  "models": ["yolov8n.pt", "yolov8s.pt", "yolov8m.pt"],
+  "model_state": true,
+  "model_error": null
 }</div>
+      </div>
+
+      <div class="content-panel">
+        <div class="endpoint-row">
+          <span class="endpoint-badge get">GET</span>
+          <span class="endpoint-path">/health</span>
+        </div>
+        <p>
+          Liveness check. Always returns <code>200</code> while the process is
+          up. <code>status</code> is <code>loading</code>, <code>ok</code> or
+          <code>error</code> depending on model loading.
+        </p>
+        <div class="code-block">{
+  "status": "ok",
+  "models_ready": true
+}</div>
+      </div>
+
+      <div class="content-panel">
+        <div class="endpoint-row">
+          <span class="endpoint-badge get">GET</span>
+          <span class="endpoint-path">/ready</span>
+        </div>
+        <p>
+          Readiness check. Returns <code>200</code> once all models are loaded
+          and <code>503</code> until then, which makes it suitable as a
+          container startup or readiness probe.
+        </p>
       </div>
 
     </div>

@@ -5,6 +5,21 @@ import pytest
 from durden.services.detector import Detector
 
 
+def make_result():
+    mock_box = MagicMock()
+    mock_box.cls = [0]
+    mock_box.conf = [0.91]
+
+    coords = MagicMock()
+    coords.tolist.return_value = [1, 2, 3, 4]
+    mock_box.xyxy = [coords]
+
+    result = MagicMock()
+    result.names = {0: "person"}
+    result.boxes = [mock_box]
+    return result
+
+
 def test_load_models():
     detector = Detector(["model1.pt", "model2.pt"])
 
@@ -28,20 +43,8 @@ def test_predict_unknown_model():
 def test_predict_returns_detection():
     detector = Detector(["a.pt"])
 
-    mock_box = MagicMock()
-    mock_box.cls = [0]
-    mock_box.conf = [0.91]
-
-    coords = MagicMock()
-    coords.tolist.return_value = [1, 2, 3, 4]
-    mock_box.xyxy = [coords]
-
-    result = MagicMock()
-    result.names = {0: "person"}
-    result.boxes = [mock_box]
-
     model = MagicMock()
-    model.return_value = [result]
+    model.return_value = [make_result()]
 
     detector.models = {"a.pt": model}
     detector.active_model = "a.pt"
@@ -51,5 +54,32 @@ def test_predict_returns_detection():
     assert model_name == "a.pt"
     assert len(detections) == 1
     assert detections[0].label == "person"
+    assert detections[0].confidence == 0.91
     assert detections[0].bbox == [1, 2, 3, 4]
     assert elapsed >= 0
+
+
+def test_predict_passes_conf_and_silences_ultralytics():
+    detector = Detector(["a.pt"])
+    model = MagicMock()
+    model.return_value = [make_result()]
+    detector.models = {"a.pt": model}
+    detector.active_model = "a.pt"
+
+    detector.predict("img", conf=0.4)
+
+    model.assert_called_once_with("img", conf=0.4, verbose=False)
+
+
+def test_predict_uses_requested_model():
+    detector = Detector(["a.pt", "b.pt"])
+    model_a, model_b = MagicMock(), MagicMock()
+    model_b.return_value = [make_result()]
+    detector.models = {"a.pt": model_a, "b.pt": model_b}
+    detector.active_model = "a.pt"
+
+    model_name, _, _ = detector.predict(None, model_name="b.pt")
+
+    assert model_name == "b.pt"
+    model_a.assert_not_called()
+    model_b.assert_called_once()

@@ -30,7 +30,7 @@
 
         <div class="status-card">
             <div class="status-title"><span class="status-dot" id="statusDot"></span> SYSTEM STATUS</div>
-            <div class="status-row"><span class="status-ok" id="statusText">CHECKING…</span></div>
+            <div class="status-row" aria-live="polite"><span class="status-ok" id="statusText">CHECKING…</span></div>
             <div class="status-row">MODEL<br><b id="statusModel">—</b></div>
             <div class="status-row">UPTIME<br><b id="uptime">00:00:00</b></div>
             <div class="status-row">API<br><b id="statusMeta">—</b></div>
@@ -45,7 +45,7 @@
             </div>
             <div class="live-badge" id="liveBadge">
                 <span class="live-dot" id="liveDot"></span>
-                <span id="liveText">LIVE</span>
+                <span id="liveText">ONLINE</span>
             </div>
         </div>
 
@@ -64,15 +64,16 @@
                     </select>
                 </div>
                 
-                <div class="dropzone" id="dropzone">
+                <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Upload an image: drag and drop or press Enter to browse">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 18a4 4 0 0 1-1-7.86A5 5 0 0 1 15.9 7H17a4 4 0 0 1 1 7.86"/><path d="M12 12v8M9 15l3-3 3 3"/></svg>
                     <div class="dropzone-title">DRAG &amp; DROP IMAGE HERE</div>
                     <div class="dropzone-sub">or click to browse</div>
                 </div>
                 <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" style="display:none">
                 <div class="filehint">JPG, PNG, WEBP • Max size 10MB</div>
+                <div class="file-error" id="fileError" role="alert"></div>
                 <div class="file-card" id="fileCard">
-                    <img class="file-thumb" id="fileThumb" alt="">
+                    <img class="file-thumb" id="fileThumb" alt="Selected image preview">
                     <div class="file-meta">
                         <div class="file-name" id="fileName"></div>
                         <div class="file-size" id="fileSize"></div>
@@ -87,7 +88,7 @@
 
                 <div class="threshold-block">
                     <div class="threshold-label">CONFIDENCE THRESHOLD <span class="val" id="threshVal">0.25</span></div>
-                    <input type="range" id="threshold" min="0" max="1" step="0.01" value="0.25">
+                    <input type="range" id="threshold" min="0.05" max="1" step="0.01" value="0.25" aria-label="Confidence threshold">
                 </div>
             </div>
 
@@ -109,8 +110,8 @@
                         </div>
 
                         <div class="canvas-wrap" id="canvasWrap">
-                            <img id="sourceImg" alt="">
-                            <canvas id="overlay"></canvas>
+                            <img id="sourceImg" alt="Uploaded image">
+                            <canvas id="overlay" role="img" aria-label="Uploaded image with detected objects outlined"></canvas>
                         </div>
 
                         <div class="loading-overlay" id="loadingOverlay">

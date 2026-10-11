@@ -29,7 +29,7 @@
 
         <div class="status-card">
             <div class="status-title"><span class="status-dot" id="statusDot"></span> SYSTEM STATUS</div>
-            <div class="status-row"><span class="status-ok" id="statusText">CHECKING…</span></div>
+            <div class="status-row" aria-live="polite"><span class="status-ok" id="statusText">CHECKING…</span></div>
             <div class="status-row">MODEL<br><b id="statusModel">—</b></div>
             <div class="status-row">UPTIME<br><b id="uptime">00:00:00</b></div>
             <div class="status-row">API<br><b id="statusMeta">—</b></div>
@@ -44,7 +44,7 @@
             </div>
             <div class="live-badge" id="liveBadge">
                 <span class="live-dot" id="liveDot"></span> 
-                <span id="liveText">LIVE</span>
+                <span id="liveText">ONLINE</span>
             </div>
         </div>
 
@@ -55,7 +55,7 @@
                     WHAT IS DURDEN
                 </h2>
                 <p>
-                    Durden is a real-time object detection tool built around a YOLO model.
+                    Durden is an object detection tool built around a YOLO model.
                     Upload an image, and the model returns every object it recognizes —
                     each with a label, a confidence score, and a bounding box — rendered
                     directly on top of your image.
@@ -76,8 +76,8 @@
                     <li>You drop or select an image on the <b style="color:#d8d8d8;">Detect</b> page.</li>
                     <li>The browser sends it to the backend as a <code>multipart/form-data</code> upload.</li>
                     <li>A YOLO model runs inference and returns labels, confidence scores, and bounding box coordinates for everything it finds.</li>
-                    <li>The frontend draws each box directly onto the image, color-coded by object class, and lists every detection in a sortable table below.</li>
-                    <li>A confidence slider lets you filter out low-confidence detections without re-running inference.</li>
+                    <li>The frontend draws each box directly onto the image, color-coded by object class, and lists every detection in a table below.</li>
+                    <li>A confidence slider lets you filter out low-confidence detections without re-running inference, and a model selector switches between the available YOLO variants.</li>
                 </ul>
             </div>
 
@@ -88,8 +88,8 @@
                 </h2>
                 <p>
                     The backend is a <b style="color:#d8d8d8;">FastAPI</b> service wrapping a YOLO
-                    model for inference, exposing a simple <code>/predict</code> endpoint plus a
-                    <code>/status</code> endpoint for health and model information.
+                    model for inference, exposing a <code>/predict</code> endpoint plus <code>/health</code>,
+                    <code>/ready</code> and <code>/status</code> endpoints for health and model information.
                 </p>
                 <p>
                     The frontend is plain HTML, CSS, and JavaScript — no build step or

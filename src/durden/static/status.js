@@ -7,117 +7,147 @@
     const modelSelect = document.getElementById('modelSelect');
     const liveBadge = document.getElementById('liveBadge');
     const liveText = document.getElementById('liveText');
-    const detectBtn = document.getElementById('detectBtn');
+
+    const POLL_FAST_MS = 3000;
+    const POLL_SLOW_MS = 15000;
+
+    const state = window.durdenStatus = {
+        online: false,
+        ready: false,
+        failed: false,
+        models: [],
+    };
 
     let serverStartTime = null;
-    let serverOnline = false;
+    let renderedModels = '';
+    let timer = null;
     const pageLoadTime = Date.now();
 
-    function pad(n) { return n.toString().padStart(2,'0'); }
+    function emit() {
+        document.dispatchEvent(new CustomEvent('durden:status', { detail: { ...state } }));
+    }
+
+    function pad(n) { return n.toString().padStart(2, '0'); }
 
     function updateUptime() {
-        if (!uptimeEl) return;
-        if (!serverOnline) return;
+        if (!uptimeEl || !state.online) return;
         const base = serverStartTime !== null ? serverStartTime : pageLoadTime;
         const s = Math.max(0, Math.floor((Date.now() - base) / 1000));
         const hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60), ss = s % 60;
         uptimeEl.textContent = `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
     }
     setInterval(updateUptime, 1000);
-    updateUptime();
 
-    function populateModelSelect(models){
+    function setStatusText(text, cls) {
+        if (!statusText) return;
+        statusText.classList.remove('status-ok', 'status-off', 'status-loading');
+        statusText.classList.add(cls);
+        statusText.textContent = text;
+    }
+
+    function setDot(cls) {
+        if (!statusDot) return;
+        statusDot.classList.remove('offline', 'loading');
+        if (cls) statusDot.classList.add(cls);
+    }
+
+    function setSelectMessage(message) {
         if (!modelSelect) return;
-        if (!models.length) {
-            modelSelect.innerHTML = '<option value="">No models available</option>';
-            modelSelect.disabled = true;
-            if (statusModel) statusModel.textContent = '—';
-            return;
+        renderedModels = '';
+        modelSelect.replaceChildren(new Option(message, ''));
+        modelSelect.disabled = true;
+    }
+
+    function populateModelSelect(models) {
+        const key = models.join('|');
+
+        if (modelSelect && key !== renderedModels) {
+            const previous = modelSelect.value;
+            modelSelect.replaceChildren(...models.map(name => new Option(name, name)));
+            modelSelect.value = models.includes(previous) ? previous : models[0];
+            renderedModels = key;
         }
-        modelSelect.innerHTML = models
-        .map(name => `<option value="${name}">${name}</option>`)
-        .join('');
-        modelSelect.disabled = false;
-        modelSelect.value = models[0];
-        if (statusModel) statusModel.textContent = models[0];
+        if (modelSelect) modelSelect.disabled = !models.length;
+
+        if (statusModel) {
+            statusModel.textContent = (modelSelect && modelSelect.value) || models[0] || '—';
+        }
+    }
+
+    function applyOnline(data) {
+        state.online = true;
+        state.ready = !!data.model_state;
+        state.failed = !!data.model_error;
+        state.models = data.models || [];
+
+        if (liveBadge) liveBadge.classList.remove('offline');
+        if (liveText) liveText.textContent = 'ONLINE';
+
+        if (data.started_at) {
+            const parsed = Date.parse(data.started_at);
+            if (!isNaN(parsed)) serverStartTime = parsed;
+        }
+        if (statusMeta) statusMeta.textContent = `v${data.version} · ${data.environment}`;
+        if (state.ready) {
+            setDot(null);
+            setStatusText('● OPERATIONAL', 'status-ok');
+            populateModelSelect(state.models);
+        } else if (state.failed) {
+            setDot('offline');
+            setStatusText('● MODEL ERROR', 'status-off');
+            if (statusModel) statusModel.textContent = '—';
+            setSelectMessage('Models failed to load');
+        } else {
+            setDot('loading');
+            setStatusText('● LOADING MODELS', 'status-loading');
+            if (statusModel) statusModel.textContent = '—';
+            setSelectMessage('Loading models…');
+        }
+        updateUptime();
+    }
+
+    function applyOffline() {
+        state.online = false;
+        state.ready = false;
+        state.failed = false;
+        state.models = [];
+
+        setDot('offline');
+        setStatusText('● OFFLINE', 'status-off');
+        if (liveBadge) liveBadge.classList.add('offline');
+        if (liveText) liveText.textContent = 'OFFLINE';
+        if (uptimeEl) uptimeEl.textContent = '—';
+        if (statusModel) statusModel.textContent = '—';
+        if (statusMeta) statusMeta.textContent = '—';
+        setSelectMessage('No models available');
     }
 
     async function loadStatus() {
+        clearTimeout(timer);
+        if (document.hidden) return;
+
         try {
-            const res = await fetch('/status');
+            const res = await fetch('/status', { cache: 'no-store' });
             if (!res.ok) throw new Error('status ' + res.status);
-            const data = await res.json();
-
-            serverOnline = true;
-
-            if (statusDot) statusDot.classList.remove('offline');
-            if (liveBadge) liveBadge.classList.remove('offline');
-            if (liveText) liveText.textContent = 'LIVE';
-
-            if (data.started_at) {
-                const parsed = Date.parse(data.started_at);
-                if(!isNaN(parsed)) serverStartTime = parsed;
-            }
-
-            if (statusMeta) statusMeta.textContent = `v${data.version} · ${data.environment}`;
-            if (data.model_state) {
-                if (statusDot) statusDot.classList.remove('loading');
-                if (statusText) {
-                    statusText.classList.remove('status-off', 'status-loading');
-                    statusText.classList.add('status-ok');
-                    statusText.textContent = '● OPERATIONAL';
-                }
-                if (detectBtn) detectBtn.disabled = false;
- 
-                populateModelSelect(data.models || []);
-            } else {
-                if (statusDot) statusDot.classList.add('loading');
-                if (statusText) {
-                    statusText.classList.remove('status-off', 'status-ok');
-                    statusText.classList.add('status-loading');
-                    statusText.textContent = '● LOADING MODELS';
-                }
-                if (statusModel) statusModel.textContent = '—';
-                if (detectBtn) detectBtn.disabled = true;
- 
-                if (modelSelect) {
-                    modelSelect.innerHTML = '<option value="">Loading models…</option>';
-                    modelSelect.disabled = true;
-                }
-            }
-
-            updateUptime();
-        } catch(err) {
+            applyOnline(await res.json());
+        } catch (err) {
             console.error('Failed to load /status', err);
-            serverOnline = false;
-
-            if (statusDot) statusDot.classList.add('offline');
-            if (statusText) {
-                statusText.classList.remove('status-ok');
-                statusText.classList.add('status-off');
-                statusText.textContent = '● OFFLINE';
-            }
-            if (liveBadge) liveBadge.classList.add('offline');
-            if (liveText) liveText.textContent = 'OFFLINE';
-            if (uptimeEl) uptimeEl.textContent = '—';
-            if (statusModel) statusModel.textContent = '—';
-            if (statusMeta) statusMeta.textContent = '—';
-            if (detectBtn) detectBtn.disabled = true;
-
-            if (modelSelect) {
-                modelSelect.innerHTML = '<option value="">No models available</option>';
-                modelSelect.disabled = true;
-            }
+            applyOffline();
         }
+
+        emit();
+        timer = setTimeout(loadStatus, state.online && state.ready ? POLL_SLOW_MS : POLL_FAST_MS);
     }
 
-    if (modelSelect){
+    if (modelSelect) {
         modelSelect.addEventListener('change', () => {
-        if (statusModel) statusModel.textContent = modelSelect.value || '—';
+            if (statusModel) statusModel.textContent = modelSelect.value || '—';
         });
     }
 
-    loadStatus();
-    setInterval(loadStatus, 4000);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) loadStatus();
+    });
 
+    loadStatus();
 })();
